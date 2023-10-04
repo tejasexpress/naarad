@@ -73,14 +73,14 @@ def get_html(data):
 
     for post in data:
         if 'message' in post:
-          if (type(post['message']) is str):
-            post['message'] = fixnewlines(post['message'])
+          if (type(post['post_text']) is str):
+            post['post_text'] = fixnewlines(post['post_text'])
             if 'flag' not in post :
-                post['message'] = enable_links(post['message'])
+                post['post_text'] = enable_links(post['post_text'])
                 post['flag'] = 1 
-            post['message'] = post['message'].replace("\"","'")   
-            post['short_message'] = truncate(post['message'],150)
-            post['read_more'] = truncate_length(post['message'],150)
+            post['post_text'] = post['post_text'].replace("\"","'")   
+            post['short_message'] = truncate(post['post_text'],150)
+            post['read_more'] = truncate_length(post['post_text'],150)
     json.dump(data, open('docs/feed.json', 'w'))
     template = Template(template_raw)
     html = template.render(data=data)
