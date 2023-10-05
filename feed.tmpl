@@ -68,9 +68,9 @@
                           {{post['short_message'] }}
                     {% if post['read_more'] %}
                       {% if post['pic'] %}
-                        <a href="#" data-toggle="modal" data-target="#big" data-source=" {{post['source']}} " data-message=" {{post['message']}} " data-img = "{{post['pic']}}" class="card-link"> [...]</a>
+                        <a href="#" data-toggle="modal" data-target="#big" data-source=" {{post['source']}} " data-message=" {{post['post_text']}} " data-img = "{{post['pic']}}" class="card-link"> [...]</a>
                       {% else %}
-                        <a href="#" data-toggle="modal" data-target="#big" data-source=" {{post['source']}} " data-message=" {{post['message']}} " data-img = "0" class="card-link"> [...]</a>
+                        <a href="#" data-toggle="modal" data-target="#big" data-source=" {{post['source']}} " data-message=" {{post['post_text']}} " data-img = "0" class="card-link"> [...]</a>
                       {% endif %}
                     {% endif %}
                         </p>

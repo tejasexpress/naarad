@@ -3,8 +3,7 @@ from __future__ import print_function
 import os
 import re
 import json
-from dateutil.parser import parse
-from dateutil import tz
+from dateutil.parser import parse, tz
 import time
 import requests
 
@@ -14,6 +13,12 @@ from frontend import write_html
 # To get an access token follow this SO answer:
 # http://stackoverflow.com/a/16054555/1780891
 
+base_url = 'https://graph.facebook.com/v2.8/'
+with open('./ACCESS_TOKEN', 'r') as f:
+	access_token = f.readline().rstrip('\n')
+payload = {'access_token': access_token, 'limit': 2}
+
+req_session = requests.Session()
 
 
 def get_comments(post_id):
@@ -94,7 +99,7 @@ Veunu: {}
 	"""
 	for event in all_events['data']:
 		if event['id'] in post_id:
-			DateTime = prettify_date([{'time': event['start_time']}])
+			DateTime = prettify_date([{'created_time': event['start_time']}])
 			if 'description' in event.keys():  # checking if the event have description
 				message = message.format(event['description'],
 										 DateTime[0]['real_time'],
@@ -151,7 +156,7 @@ def get_feed(page_id, pages=10):
 	# check last update time
 	try:
 		old_data = json.load(open('docs/{}.json'.format(page_id), 'r'))
-		last_post_time = parse(old_data[0]['time'])
+		last_post_time = parse(old_data[0]['created_time'])
 	except FileNotFoundError:
 		old_data = []
 		last_post_time = parse("1950-01-01T12:05:06+0000")
@@ -160,20 +165,70 @@ def get_feed(page_id, pages=10):
 
 	# scrape the first page
 	print('scraping:', sub_url)
-	with open('test.json') as data_file:
-		var = json.load(data_file)
-
-	feed = var
-	new_page_data = feed
+	response = req_session.get(base_url + sub_url, params=payload)
+	feed = json.loads(response.text)
+	new_page_data = feed['data']
 
 	data = []
-	is_new_post = (parse(new_page_data[0]['time']) > last_post_time)
+	is_new_post = (parse(new_page_data[0]['created_time']) > last_post_time)
 
 	if is_new_post:
 		data = new_page_data
+
+	# determine the next page
+	next_page = feed['paging']['next']
+	next_search = re.search('.*(until=[0-9]+)', next_page, re.IGNORECASE)
+	if next_search:
+		the_until_arg = next_search.group(1)
+
+	pages = pages - 1
+
+	# scrape the rest of the pages
+	while (next_page is not False) and is_new_post and pages > 0:
+		sub_url = page_id + '/feed?' + the_until_arg
+		print('baking:', sub_url)
+		try:
+			response = req_session.get(base_url + sub_url, params=payload)
+			feed = json.loads(response.text)
+			new_page_data = feed['data']
+			is_new_post = (
+				parse(new_page_data[0]['created_time']) > last_post_time)
+
+			data.extend(new_page_data)
+		except requests.exceptions.RequestException:
+			print('start again at', the_query)
+			break
+
+		# determine the next page, until there isn't one
+		try:
+			next_page = feed['paging']['next']
+			next_search = re.search(
+				'.*(until=[0-9]+)', next_page, re.IGNORECASE)
+			if next_search:
+				the_until_arg = next_search.group(1)
+		except IndexError:
+			print('last page...')
+			next_page = False
+		pages = pages - 1
+		for post_dict in data:
+			post_dict['pic'] = get_picture(post_dict['id'], dir='docs')
+			post_dict['link'] = get_link(post_dict['id'])
+			if "story" in post_dict :  #Events and shared post have story key
+				if "event" in post_dict['story'] :
+					post_dict['message'] = get_event(post_dict['id'], page_id)
+					post_dict['pic'] = get_event_picture(post_dict['id'],dir='docs')
+				elif "shared" in post_dict['story'] :
+
+					post_dict['message'] = '<b>' + post_dict['story'] + '</b>' + '\n\n' + get_shared_post(post_dict['id']) 
+
+			  #  print (post_dict['message'])
+			else :
+				if not "message" in post_dict :
+					post_dict['message'] = get_video(post_dict['id'])
+
 			
 	data.extend(old_data)
-	data.sort(key=lambda x: parse(x['time']), reverse=True)
+	data.sort(key=lambda x: parse(x['created_time']), reverse=True)
 
 	json.dump(data, open('docs/{}.json'.format(page_id), 'w'))
 
@@ -191,7 +246,7 @@ def remove_duplicates(data):
 
 def prettify_date(data):
 	for item in data:
-		date = parse(item['time'])
+		date = parse(item['created_time'])
 		tzlocal = tz.gettz('Asia/Kolkata')
 		local_date = date.astimezone(tzlocal)
 		item['real_date'] = local_date.strftime('%d-%m-%Y')
@@ -213,7 +268,7 @@ def get_aggregated_feed(pages):
 			data_dict['source'] = page_name
 		data.extend(page_data)
 
-	data.sort(key=lambda x: parse(x['time']), reverse=True)
+	data.sort(key=lambda x: parse(x['created_time']), reverse=True)
 	return data
 
 
