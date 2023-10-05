@@ -76,12 +76,12 @@
                         </p>
                     {% if post['read_more'] %}
                       {% if post['pic'] %}
-                        <a href="#" data-toggle="modal" data-target="#big" data-source=" {{post['source']}} " data-message=" {{post['message']}} " data-img = "{{post['pic']}}" class="card-link"><i class="fa fa-book fa-lg"></i> Read more</a>
+                        <a href="#" data-toggle="modal" data-target="#big" data-source=" {{post['source']}} " data-message=" {{post['post_text']}} " data-img = "{{post['image']}}" class="card-link"><i class="fa fa-book fa-lg"></i> Read more</a>
                       {% else %}
-                        <a href="#" data-toggle="modal" data-target="#big" data-source=" {{post['source']}} " data-message=" {{post['message']}} " data-img = "0" class="card-link"><i class="fa fa-book fa-lg"></i> Read more</a>
+                        <a href="#" data-toggle="modal" data-target="#big" data-source=" {{post['source']}} " data-message=" {{post['post_text']}} " data-img = "0" class="card-link"><i class="fa fa-book fa-lg"></i> Read more</a>
                       {% endif %}
                     {% endif %}
-                        <a href="https://www.facebook.com/{{ post['id'] }}" target="_blank" class="card-link"><i class="fa fa-facebook-official fa-lg"></i> View post</a>
+                        <a href="{{ post['post_url'] }}" target="_blank" class="card-link"><i class="fa fa-facebook-official fa-lg"></i> View post</a>
                     </div>
                     <div class="card-footer" style="background: #3E4450; color: white;">
                         <h6 class="card-subtitle small">Posted on {{ post['real_date'] }} at {{ post['real_time'] }}</h6>

@@ -72,7 +72,7 @@ def get_html(data):
     template_raw = open('feed.tmpl', 'r').read()
 
     for post in data:
-        if 'message' in post:
+        if 'post_text' in post:
           if (type(post['post_text']) is str):
             post['post_text'] = fixnewlines(post['post_text'])
             if 'flag' not in post :
