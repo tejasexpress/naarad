@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 import re
 import json
-from dateutil.parser import parse, tz
+from dateutil.parser import parse
 import time
 from facebook_scraper import get_posts
 from operator import itemgetter
@@ -48,6 +48,13 @@ def remove_duplicates(data):
 
 	return uniq_data
 
+def data_prettify(data):
+	for item in data:
+		date = parse(item['time'])
+		item['real_date'] = date.strftime('%d-%m-%Y')
+		item['real_time'] = date.strftime('%I:%M%p')
+	return data
+
 
 def get_aggregated_feed(pages):
 	"""
@@ -74,11 +81,11 @@ if __name__ == "__main__":
 
 	data = get_aggregated_feed(news_pages)
 	data = remove_duplicates(data)
-	serial_data = json.load(open('docs/feed.json', 'r'))
+	data_prettify(data)
 	with open('docs/feed.json', 'w') as f:
 		print(json.dumps(data, indent = 4, default=str), file=f)
 
-	write_html(serial_data, 'docs/index.html')
+	write_html(data, 'docs/index.html')
 
 	localtime = str(time.asctime( time.localtime(time.time()) ))
 	stamp="			<font size=2 color=\"white\"><div align=\"right\"><b>Last updated: "+localtime+" IST</b></div></font>\n"
